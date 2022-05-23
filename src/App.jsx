@@ -1,7 +1,6 @@
 import { ethers } from "ethers";
 import abi from "./utils/WavePortal.json";
 import React, { useEffect, useState } from "react";
-
 import "./App.css";
 
 const App = () => {
@@ -11,9 +10,6 @@ const App = () => {
     const [currentAccount, setCurrentAccount] = useState("");
     const contractAddress = "0x2924308941860407Ce3Ff98442A49EEa8E7a0AfA";
  
-  
-    
-
     const checkIfWalletIsConnected = async () => {
         try {
             const { ethereum } = window;
@@ -68,16 +64,17 @@ const App = () => {
                 const provider = new ethers.providers.Web3Provider(ethereum);
                 const signer = provider.getSigner();
                 const wavePortalContract = new ethers.Contract(contractAddress,                        contractABI, signer);
+              
                 let count = await wavePortalContract.getTotalWaves();
                 console.log("Retrieved total wave count...", count.toNumber());
-                /*
-                 * Execute the actual wave from your smart contract
-                 */
+             
                 const waveTxn = await wavePortalContract.wave(userMessage, { gasLimit:                 300000 });
                 console.log("Mining...", waveTxn.hash);
                 await waveTxn.wait();
+              
                 console.log("Mined -- ", waveTxn.hash);
                 count = await wavePortalContract.getTotalWaves();
+              
                 console.log("Retrieved total wave count...", count.toNumber());
             } else {
                 console.log("Ethereum object doesn't exist!");
@@ -87,23 +84,23 @@ const App = () => {
         }
     };
 
-    const getAllWaves = async () => {
-      const { ethereum } = window;
+const getAllWaves = async () => {
+  const { ethereum } = window;
 
-      try {
-        if (ethereum) {
-          const provider = new ethers.providers.Web3Provider(ethereum);
-          const signer = provider.getSigner();
-          const wavePortalContract = new ethers.Contract(contractAddress, contractABI,           signer);
-          const waves = await wavePortalContract.getAllWaves();
+  try {
+    if (ethereum) {
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+      const waves = await wavePortalContract.getAllWaves();
 
-          const wavesCleaned = waves.map(wave => {
-            return {
-              address: wave.waver,
-              timestamp: new Date(wave.timestamp * 1000),
-              message: wave.message,
-            };
-           });
+      const wavesCleaned = waves.map(wave => {
+        return {
+          address: wave.waver,
+          timestamp: new Date(wave.timestamp * 1000),
+          message: wave.message,
+        };
+      });
 
       setAllWaves(wavesCleaned);
     } else {
@@ -146,40 +143,6 @@ useEffect(() => {
     }
   };
 }, []);
-
-    useEffect(() => {
-        checkIfWalletIsConnected();
-    }, []);
-
-    useEffect(() => {
-        let wavePortalContract;
-
-        const onNewWave = (from, timestamp, message) => {
-            console.log("NewWave", from, timestamp, message);
-            setAllWaves((prevState) => [
-                ...prevState,
-                {
-                    address: from,
-                    timestamp: new Date(timestamp * 1000),
-                    message: message,
-                },
-            ]);
-        };
-
-        if (window.ethereum) {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-
-            wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
-            wavePortalContract.on("NewWave", onNewWave);
-        }
-
-        return () => {
-            if (wavePortalContract) {
-                wavePortalContract.off("NewWave", onNewWave);
-            }
-        };
-    }, []);
 
     return (
         
